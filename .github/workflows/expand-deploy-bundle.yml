@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   expand:
-    if: ${{ hashFiles('project-bundle/part-*') != '' }}
+    if: ${{ hashFiles('deploy-bundle-v2/part-*') != '' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -17,14 +17,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Rebuild and extract bundle
+      - name: Rebuild, verify and extract bundle
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p .bundle_tmp
-          cat project-bundle/part-* > .bundle_tmp/app.tar.xz
+          cat deploy-bundle-v2/part-* > .bundle_tmp/app.tar.xz
+          echo "00fe22f7f9c222bedb30bfec89b9c2a5376e8c3d7fcb5dcce22e0f8d2f0b47bb  .bundle_tmp/app.tar.xz" | sha256sum -c -
           tar -xJf .bundle_tmp/app.tar.xz -C .
-          rm -rf .bundle_tmp project-bundle
+          rm -rf .bundle_tmp deploy-bundle-v2
 
       - name: Commit expanded project
         shell: bash
