@@ -1,0 +1,14 @@
+{% extends 'base.html' %}{% block content %}
+<section class="page-head"><div><span class="eyebrow">الخدام</span><h1>الخدام والتوزيعات</h1><p>أضف الخادم واربطه بالخدمة الثابتة من نفس الشاشة، مع منع تعارض نفس اليوم.</p></div></section>
+<section class="panel">
+  <div class="section-head"><div><h2>إضافة خادم وتعيينه</h2><p class="muted">لو الخدمة محددة، سيتم إنشاء الـAssignment تلقائيًا.</p></div></div>
+  <form class="formgrid" method="post" action="{{url_for('web.create_servant')}}"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="next" value="{{url_for('web.servants')}}">
+    <label>اسم الخادم<input name="name" required></label>
+    <label>الخدمة<select name="service_id"><option value="">بدون خدمة</option>{% for sid,s in services.items() %}<option value="{{sid}}">{{s.service_name}} — {{arabic_weekday(s.day_of_week)}}</option>{% endfor %}</select></label>
+    <label>من<input type="date" name="start_date"></label><label>إلى<input type="date" name="end_date"></label>
+    <div class="full"><button class="btn primary">إضافة الخادم</button></div>
+  </form>
+</section>
+<section class="panel"><div class="section-head"><h2>الخدام النشطون</h2><span class="pill">{{servants|length}}</span></div><div class="table-wrap"><table><thead><tr><th>ID</th><th>الاسم</th><th>الحالة</th><th>الخدمات</th></tr></thead><tbody>{% for s in servants %}<tr><td><b>{{s.servant_id}}</b></td><td>{{s.name}}</td><td><span class="badge good">{{s.status}}</span></td><td>{% for a in assignments if a.servant_id==s.servant_id %}<span class="mini">{{services[a.service_id].service_name}}</span>{% else %}—{% endfor %}</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}
