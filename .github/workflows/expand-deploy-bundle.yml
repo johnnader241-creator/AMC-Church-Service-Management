@@ -1,0 +1,40 @@
+name: Expand deployment bundle
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  expand:
+    if: ${{ hashFiles('project-bundle/part-*') != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Rebuild and extract bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .bundle_tmp
+          cat project-bundle/part-* > .bundle_tmp/app.tar.xz
+          tar -xJf .bundle_tmp/app.tar.xz -C .
+          rm -rf .bundle_tmp project-bundle
+
+      - name: Commit expanded project
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "Expand production application bundle"
+          git push
