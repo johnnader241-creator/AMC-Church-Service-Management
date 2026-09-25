@@ -1,0 +1,17 @@
+{% extends 'base.html' %}{% block content %}
+<section class="page-head"><div><span class="eyebrow">Transfers</span><h1>نقل الخدام</h1><p>اختار الخادم والخدمة الحالية والخدمة الجديدة بالاسم بدل إدخال IDs.</p></div></section>
+<section class="panel">
+  <div class="section-head"><div><h2>طلب نقل</h2><p class="muted">الخادم المقترح يظهر حسب الخدمة الحالية التي يعمل بها الآن.</p></div></div>
+  <form class="formgrid" method="post" action="{{url_for('web.create_transfer')}}" id="transferForm"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+    <label>الخدمة الحالية<select name="from_service_id" id="transferFrom" required><option value="">اختر الخدمة الحالية</option>{% for s in services %}<option value="{{s.service_id}}">{{s.service_name}} — {{arabic_weekday(s.day_of_week)}}</option>{% endfor %}</select></label>
+    <label>الخادم<select name="servant_id" id="transferServant" required disabled><option value="">اختر الخدمة الحالية أولًا</option>{% for s in servants %}{% for a in assignments if a.servant_id==s.servant_id %}<option value="{{s.servant_id}}" data-service="{{a.service_id}}" data-start="{{a.start_date}}" data-end="{{a.end_date}}">{{s.name}}</option>{% endfor %}{% endfor %}</select></label>
+    <label>إلى الخدمة<select name="to_service_id" id="transferTo" required disabled><option value="">اختر الخدمة الحالية أولًا</option>{% for s in services %}<option value="{{s.service_id}}">{{s.service_name}} — {{arabic_weekday(s.day_of_week)}}</option>{% endfor %}</select></label>
+    <div class="full"><button class="btn primary">إرسال طلب النقل</button></div>
+  </form>
+</section>
+<section class="panel"><div class="table-wrap"><table><thead><tr><th>الخادم</th><th>من</th><th>إلى</th><th>التنفيذ</th><th>الحالة</th><th>الإجراء</th></tr></thead><tbody>
+{% for t in transfers %}<tr><td>{{t.servant_id}}</td><td>{{t.from_service_id}}</td><td>{{t.to_service_id}}</td><td>{{t.effective_date}}</td><td><span class="badge">{{t.status}}</span></td><td>{% if t.status=='PENDING' and user.role_id!='R001' %}<form method="post" action="{{url_for('web.destination_approve',transfer_id=t.transfer_id)}}"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><button class="btn small">اعتماد الاستقبال</button></form>{% endif %}{% if user.role_id=='R001' and t.status in ['PENDING','DESTINATION_APPROVED'] %}<form method="post" action="{{url_for('web.super_approve_transfer',transfer_id=t.transfer_id)}}"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><button class="btn small">اعتماد نهائي</button></form>{% endif %}</td></tr>{% else %}<tr><td colspan="6">لا توجد نقلات.</td></tr>{% endfor %}</tbody></table></div></section>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{const from=document.getElementById('transferFrom'), servant=document.getElementById('transferServant'), to=document.getElementById('transferTo'); const ss=[...servant.querySelectorAll('option[data-service]')]; function sync(){const sid=from.value; servant.value=''; to.value=''; servant.disabled=!sid; to.disabled=!sid; ss.forEach(o=>o.hidden=o.dataset.service!==sid); to.querySelectorAll('option').forEach(o=>{o.hidden=o.value===sid&&o.value!=='';});} from.addEventListener('change',sync);});
+</script>
+{% endblock %}
