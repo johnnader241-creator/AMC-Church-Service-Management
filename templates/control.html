@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="page-head"><div><span class="eyebrow">Control Center</span><h1>مركز التحكم</h1><p>إدارة المستخدمين والخدمات والأدوار والصلاحيات من مكان واحد.</p></div></section>
+
+<div class="grid two">
+  <section class="panel">
+    <div class="section-head"><div><span class="eyebrow">Roles</span><h2>المسمى العام للدور</h2></div></div>
+    <form class="formgrid" method="post" action="{{url_for('web.update_role')}}"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+      <label>اختيار الدور
+        <select name="role_id" onchange="location='{{url_for('web.control')}}?role_id='+this.value">
+          {% for r in roles %}<option value="{{r.role_id}}" {% if r.role_id==selected_role_id %}selected{% endif %}>{{r.display_name}} — {{r.role_code}}</option>{% endfor %}
+        </select>
+      </label>
+      <label>المسمى العام القابل للتعديل
+        <input name="display_name" value="{{selected_role.display_name if selected_role else ''}}" required>
+      </label>
+      <div class="full"><button class="btn primary">حفظ المسمى العام</button></div>
+    </form>
+  </section>
+  <section class="panel">
+    <h2>حالة النظام</h2>
+    <div class="grid kpis"><div class="card"><span>Users</span><b>{{users|length}}</b></div><div class="card"><span>Services</span><b>{{services|length}}</b></div><div class="card"><span>Roles</span><b>{{roles|length}}</b></div><div class="card"><span>Permissions</span><b>{{perms|length}}</b></div></div>
+  </section>
+</div>
+
+<section class="panel">
+  <div class="section-head"><div><span class="eyebrow">Servants</span><h2>إضافة خادم + إدخاله في الخدمة مباشرة</h2><p class="muted">الخدمة ثابتة ويمكن اختيارها وقت إنشاء الخادم، مع فترة التعيين داخل سنة الخدمة المفتوحة.</p></div></div>
+  <form class="formgrid" method="post" action="{{url_for('web.create_servant')}}"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="next" value="{{url_for('web.control')}}">
+    <label>اسم الخادم<input name="name" required></label>
+    <label>الخدمة
+      <select name="service_id">
+        <option value="">بدون خدمة حاليًا</option>
+        {% for s in services %}<option value="{{s.service_id}}">{{s.service_name}} — {{arabic_weekday(s.day_of_week)}}</option>{% endfor %}
+      </select>
+    </label>
+    <label>من<input type="date" name="start_date"></label>
+    <label>إلى<input type="date" name="end_date"></label>
+    <div class="full"><button class="btn primary">إضافة الخادم وتعيينه</button></div>
+  </form>
+</section>
+
+<section class="panel">
+  <div class="section-head"><div><span class="eyebrow">Permission Matrix</span><h2>مصفوفة الصلاحيات</h2><p class="muted">اختار الدور من الفلتر، عدّل الصلاحيات بالـcheckboxes، ثم احفظ مرة واحدة.</p></div><span class="status-pill success">{{selected_role.display_name if selected_role else '—'}}</span></div>
+  <form method="post" action="{{url_for('web.update_role_permissions_bulk')}}"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="role_id" value="{{selected_role_id}}">
+    <div class="matrix-toolbar">
+      <label>فلتر الدور<select onchange="location='{{url_for('web.control')}}?role_id='+this.value">{% for r in roles %}<option value="{{r.role_id}}" {% if r.role_id==selected_role_id %}selected{% endif %}>{{r.display_name}}</option>{% endfor %}</select></label>
+      <div class="matrix-actions"><button type="button" class="btn" onclick="matrixSet(true)">تحديد الكل</button><button type="button" class="btn" onclick="matrixSet(false)">إلغاء الكل</button><button class="btn primary">حفظ المصفوفة</button></div>
+    </div>
+    <div class="table-wrap permission-matrix"><table><thead><tr><th>الشاشة</th><th>Permission</th><th>الوصف</th><th>تفعيل</th></tr></thead><tbody>
+      {% for p in perms %}
+      <tr><td>{{screens|selectattr('screen_id','equalto',p.screen_id)|map(attribute='display_name')|first or 'عام'}}</td><td><b>{{p.permission_code}}</b></td><td>{{p.permission_name}}</td><td><label class="check-cell"><input class="perm-check" type="checkbox" name="permission_id" value="{{p.permission_id}}" {% if p.permission_id in selected_perm_ids %}checked{% endif %}><span></span></label></td></tr>
+      {% endfor %}
+    </tbody></table></div>
+  </form>
+</section>
+
+<section class="panel">
+  <div class="section-head"><div><span class="eyebrow">Screen Matrix</span><h2>إعدادات الشاشات للدور</h2><p class="muted">عرض الشاشة، المشاهدة، التعديل، وOTP.</p></div></div>
+  <div class="table-wrap"><table><thead><tr><th>الدور</th><th>الشاشة</th><th>SHOW</th><th>VIEW</th><th>EDIT</th><th>OTP</th><th>حفظ</th></tr></thead><tbody>
+  {% for r in roles %}{% for s in screens %}{% set x=rs|selectattr('role_id','equalto',r.role_id)|selectattr('screen_id','equalto',s.screen_id)|list|first %}
+  <tr><form method="post" action="{{url_for('web.update_screen_setting')}}"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><input type="hidden" name="role_id" value="{{r.role_id}}"><input type="hidden" name="screen_id" value="{{s.screen_id}}"><td>{{r.display_name}}</td><td>{{s.display_name}}</td><td><input type="checkbox" name="show_screen" value="1" {% if x and x.show_screen %}checked{% endif %}></td><td><input type="checkbox" name="can_view" value="1" {% if x and x.can_view %}checked{% endif %}></td><td><input type="checkbox" name="can_edit" value="1" {% if x and x.can_edit %}checked{% endif %}></td><td><input type="checkbox" name="otp_required" value="1" {% if x and x.otp_required %}checked{% endif %}></td><td><button class="btn small">حفظ</button></td></form></tr>
+  {% endfor %}{% endfor %}
+  </tbody></table></div>
+</section>
+
+<section class="grid two">
+<section class="panel"><h2>إضافة Service</h2><form class="formgrid" method="post" action="{{url_for('web.create_service')}}"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><label>اسم الخدمة<input name="service_name" required></label><label>المرحلة<input name="stage" required></label><label>اليوم<select name="day_of_week"><option value="THURSDAY">الخميس</option><option value="FRIDAY">الجمعة</option></select></label><button class="btn primary">حفظ الخدمة</button></form></section>
+<section class="panel"><h2>إنشاء User</h2><form class="formgrid" method="post" action="{{url_for('web.create_user')}}"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><label>Username<input name="username" required></label><label>Email<input type="email" name="email" required></label><label>Password<input type="password" name="password" required></label><label>Role<select name="role_id">{% for r in roles %}<option value="{{r.role_id}}">{{r.display_name}}</option>{% endfor %}</select></label><button class="btn primary">إنشاء User</button></form></section>
+</section>
+
+<section class="panel"><h2>إنشاء Service Year وتوليد الاجتماعات</h2><form class="formgrid" method="post" action="{{url_for('web.create_year')}}"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><label>Start<input type="date" name="start_date" required></label><label>End<input type="date" name="end_date" required></label><button class="btn primary">إنشاء وتوليد</button></form></section>
+<section class="panel"><h2>أدوات الإدارة</h2><div class="grid cards"><a class="action-card" href="{{url_for('web.excel_review')}}">📥 <strong>Review Excel</strong></a><a class="action-card" href="{{url_for('web.database_explorer')}}">🗄 <strong>Database Explorer</strong></a><a class="action-card" href="{{url_for('web.trash')}}">🗑 <strong>Trash</strong></a></div></section>
+<section class="panel"><h2>OTP Settings</h2><form class="formgrid" method="post" action="{{url_for('web.update_security')}}"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><label>مدة OTP بالثواني<input type="number" name="otp_validity_seconds" value="300" min="30"></label><label>أقصى محاولات<input type="number" name="otp_max_attempts" value="5" min="1"></label><label>مدة القفل<input type="number" name="otp_lock_seconds" value="300" min="30"></label><button class="btn primary">حفظ OTP</button></form></section>
+
+<script>
+function matrixSet(value){document.querySelectorAll('.perm-check').forEach(x=>x.checked=value)}
+</script>
+{% endblock %}

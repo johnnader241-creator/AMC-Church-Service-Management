@@ -1,0 +1,17 @@
+{% extends 'base.html' %}{% block title %}الرئيسية — إدارة الخدمة{% endblock %}{% block crumb %}الرئيسية{% endblock %}{% block content %}
+<div class="hero"><div><span class="eyebrow">لوحة الإدارة الرئيسية</span><h1>أهلاً {{ user.username }} 👋</h1><p>كل اللي محتاجه في الخدمة، قدامك في مكان واحد.</p></div><div class="hero-side"><img class="hero-logo" src="{{url_for('static',filename='logo-mark.svg')}}" alt="Logo"><div class="hero-badge"><span class="dot online"></span> النظام جاهز</div></div></div>
+<div class="kpi-grid">{% for key,label in [('servants','الخدام النشطون'),('services','الخدمات'),('meetings','آخر الاجتماعات'),('events','الأحداث'),('openings','الافتتاحيات')] %}<div class="kpi"><small>{{label}}</small><strong>{{counts[key]}}</strong></div>{% endfor %}</div>
+<div class="section-title"><div><span class="eyebrow">الشاشات الرئيسية</span><h2>إدارة الخدمة</h2></div></div>
+<div class="screen-grid">
+<a class="screen-card accent-maroon" href="{{url_for('web.openings')}}"><div class="screen-icon">✦</div><div><h3>الافتتاحيات</h3><p>الروابط، الجمع، والترحيل.</p></div><span>←</span></a>
+<a class="screen-card accent-olive" href="{{url_for('web.servants')}}"><div class="screen-icon">♙</div><div><h3>الخدام</h3><p>الخدام والتوزيعات التاريخية.</p></div><span>←</span></a>
+<a class="screen-card accent-gold" href="{{url_for('web.evaluations')}}"><div class="screen-icon">▦</div><div><h3>التقييمات</h3><p>التقييم الأسبوعي واللقاءات.</p></div><span>←</span></a>
+<a class="screen-card accent-blue" href="{{url_for('web.results')}}"><div class="screen-icon">◔</div><div><h3>النتائج</h3><p>شهري، سنوي، ونتائج الخدمة.</p></div><span>←</span></a>
+<a class="screen-card accent-slate" href="{{url_for('web.events')}}"><div class="screen-icon">◈</div><div><h3>الأحداث</h3><p>إدارة الأحداث والمشاركين.</p></div><span>←</span></a>
+<a class="screen-card accent-olive" href="{{url_for('web.excuses')}}"><div class="screen-icon">📝</div><div><h3>الاعتذارات</h3><p>تسجيل ومراجعة الاعتذارات.</p></div><span>←</span></a>
+<a class="screen-card accent-gold" href="{{url_for('web.transfers')}}"><div class="screen-icon">⇄</div><div><h3>النقلات</h3><p>طلبات النقل والاعتماد.</p></div><span>←</span></a>
+{% if is_super_admin %}<a class="screen-card accent-maroon" href="{{url_for('web.control')}}"><div class="screen-icon">⚙</div><div><h3>مركز التحكم</h3><p>Users، Permissions، Audit، Database.</p></div><span>←</span></a>{% endif %}
+</div>
+<div class="info-banner"><div><strong>نظام إدارة الخدمة</strong><p>قاعدة البيانات هي المصدر الأساسي، وExcel للمراجعة والاسترجاع وفق الصلاحيات.</p></div><span class="tag">PWA</span></div>
+<section class="panel"><div class="panel-head"><h3>آخر النشاط</h3><span class="muted">سجل التدقيق</span></div><div class="table-wrap"><table><thead><tr><th>العملية</th><th>الكيان</th><th>ID</th><th>الوقت</th></tr></thead><tbody>{% for x in activity %}<tr><td>{{x.action}}</td><td>{{x.entity_type}}</td><td>{{x.entity_id or '—'}}</td><td>{{x.timestamp}}</td></tr>{% else %}<tr><td colspan="4">لا توجد عمليات بعد.</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}

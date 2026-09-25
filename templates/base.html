@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#6F1D2E">
+<meta name="description" content="نظام إدارة الخدمة">
+<link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}">
+<link rel="icon" href="{{ url_for('static',filename='logo-mark.svg') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
+<title>{{ title or 'نظام إدارة الخدمة' }}</title>
+</head>
+<body>
+{% if logged_in %}
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-copy">
+        <strong>مركز آفا موسي</strong>
+        <span>لتطوير التربية الكنسية</span>
+      </div>
+      <div class="brand-mark">
+        <img src="{{ url_for('static',filename='logo-mark.svg') }}" alt="شعار مركز آفا موسي">
+      </div>
+    </div>
+
+    <nav class="nav-stack" aria-label="التنقل الرئيسي">
+      <a class="nav-item {% if request.endpoint == 'web.dashboard' %}active{% endif %}" href="{{url_for('web.dashboard')}}"><span class="nav-icon">⌂</span><span>الرئيسية</span></a>
+      {% if screen_visibility.get('OPENINGS') and ('VIEW_OPENINGS' in permission_codes or is_super_admin) %}<a class="nav-item {% if request.endpoint == 'web.openings' %}active{% endif %}" href="{{url_for('web.openings')}}"><span class="nav-icon">✦</span><span>الافتتاحيات</span></a>{% endif %}
+      {% if screen_visibility.get('SERVANTS') and ('VIEW_SERVANTS' in permission_codes or is_super_admin) %}<a class="nav-item {% if request.endpoint == 'web.servants' %}active{% endif %}" href="{{url_for('web.servants')}}"><span class="nav-icon">♙</span><span>الخدام</span></a>{% endif %}
+      {% if screen_visibility.get('EVALUATIONS') and ('VIEW_EVALUATIONS' in permission_codes or is_super_admin) %}<a class="nav-item {% if request.endpoint == 'web.evaluations' %}active{% endif %}" href="{{url_for('web.evaluations')}}"><span class="nav-icon">▦</span><span>التقييمات</span></a>{% endif %}
+      {% if screen_visibility.get('RESULTS') and ('VIEW_EVALUATIONS' in permission_codes or 'VIEW_AUDIT_LOG' in permission_codes or is_super_admin) %}<a class="nav-item {% if request.endpoint == 'web.results' %}active{% endif %}" href="{{url_for('web.results')}}"><span class="nav-icon">◔</span><span>النتائج</span></a>{% endif %}
+      {% if screen_visibility.get('EVALUATIONS') and ('VIEW_EVENTS' in permission_codes or is_super_admin) %}<a class="nav-item {% if request.endpoint == 'web.events' %}active{% endif %}" href="{{url_for('web.events')}}"><span class="nav-icon">◈</span><span>الأحداث</span></a>{% endif %}
+      {% if screen_visibility.get('EVALUATIONS') and ('VIEW_EXCUSES' in permission_codes or is_super_admin) %}<a class="nav-item {% if request.endpoint == 'web.excuses' %}active{% endif %}" href="{{url_for('web.excuses')}}"><span class="nav-icon">📝</span><span>الاعتذارات</span></a>{% endif %}
+      {% if screen_visibility.get('SERVANTS') and ('VIEW_TRANSFERS' in permission_codes or is_super_admin) %}<a class="nav-item {% if request.endpoint == 'web.transfers' %}active{% endif %}" href="{{url_for('web.transfers')}}"><span class="nav-icon">⇄</span><span>النقلات</span></a>{% endif %}
+      {% if is_super_admin %}<a class="nav-item {% if request.endpoint == 'web.control' %}active{% endif %}" href="{{url_for('web.control')}}"><span class="nav-icon">⚙</span><span>مركز التحكم</span></a>{% endif %}
+      <a class="nav-item {% if request.endpoint == 'web.excel_review' %}active{% endif %}" href="{{url_for('web.excel_review')}}"><span class="nav-icon">▤</span><span>Excel / المراجعة</span></a>
+    </nav>
+    <div class="sidebar-footer"><span class="dot online"></span> النظام جاهز</div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn mobile-only" id="menuBtn" aria-label="فتح القائمة">☰</button>
+        <div class="top-brand-line">نظام إدارة الخدمة <span>›</span> {% block crumb %}الرئيسية{% endblock %}</div>
+      </div>
+      <div class="top-actions">
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="تبديل الوضع المظلم" aria-pressed="false">
+          <span class="theme-label">الوضع المظلم</span><span class="theme-moon">☾</span><span class="theme-switch"><span></span></span><span class="theme-sun">☼</span>
+        </button>
+        <div class="user-chip"><div class="avatar">{{ user.username[:1]|upper }}</div><div><b>{{ user.username }}</b><small>{{ user.role_id }}</small></div></div>
+        <form method="post" action="{{url_for('web.logout')}}" class="logout-form"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><button class="btn btn-logout btn-sm" type="submit">تسجيل خروج <span>↪</span></button></form>
+      </div>
+    </header>
+    <section class="page-wrap">
+      {% with messages=get_flashed_messages(with_categories=true) %}{% if messages %}<div class="flash-stack">{% for cat,msg in messages %}<div class="flash {{cat}}">{{msg}}</div>{% endfor %}</div>{% endif %}{% endwith %}
+      {% block content %}{% endblock %}
+    </section>
+  </main>
+</div>
+<script src="{{url_for('static',filename='app.js')}}"></script>
+{% else %}{% block public_content %}{% endblock %}{% endif %}
+</body>
+</html>

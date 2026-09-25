@@ -1,0 +1,43 @@
+{% extends 'base.html' %}{% block content %}
+<section class="page-head"><div><span class="eyebrow">Excuses</span><h1>الاعتذارات</h1><p>اختار الخدمة ثم يوم الاجتماع ثم الخادم بالاسم — بدون الحاجة لمعرفة أي IDs.</p></div></section>
+<section class="panel">
+  <div class="section-head"><div><h2>إنشاء اعتذار</h2><p class="muted">الخدام الظاهرون مرتبطون بالخدمة المختارة في تاريخ الاجتماع.</p></div></div>
+  <form class="formgrid" method="post" action="{{url_for('web.create_excuse')}}" id="excuseForm"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+    <label>الخدمة
+      <select name="service_id" id="excuseService" required>
+        <option value="">اختر الخدمة</option>
+        {% for s in services %}<option value="{{s.service_id}}">{{s.service_name}} — {{arabic_weekday(s.day_of_week)}}</option>{% endfor %}
+      </select>
+    </label>
+    <label>يوم الاجتماع
+      <select name="meeting_id" id="excuseMeeting" required disabled>
+        <option value="">اختر الخدمة أولًا</option>
+        {% for m in meetings %}<option value="{{m.meeting_id}}" data-service="{{m.service_id}}">{{m.meeting_date.strftime('%Y-%m-%d')}} — {{arabic_weekday(m.day_of_week)}}{% if m.status=='COMPLETED' %} — مكتمل{% endif %}</option>{% endfor %}
+      </select>
+    </label>
+    <label>الخادم
+      <select name="servant_id" id="excuseServant" required disabled>
+        <option value="">اختر يوم الاجتماع أولًا</option>
+        {% for s in servants %}
+          {% for a in assignments if a.servant_id==s.servant_id %}
+            <option value="{{s.servant_id}}" data-service="{{a.service_id}}" data-start="{{a.start_date}}" data-end="{{a.end_date}}">{{s.name}}</option>
+          {% endfor %}
+        {% endfor %}
+      </select>
+    </label>
+    <label class="full">السبب<textarea name="reason" required placeholder="اكتب سبب الاعتذار..."></textarea></label>
+    <div class="full"><button class="btn primary">إرسال للمراجعة</button></div>
+  </form>
+</section>
+<section class="panel"><div class="table-wrap"><table><thead><tr><th>الخادم</th><th>الخدمة</th><th>يوم الاجتماع</th><th>الحالة</th><th>المراجعة</th></tr></thead><tbody>
+{% for e in excuses %}<tr><td>{{names.get(e.servant_id,e.servant_id)}}</td><td>{{service_names.get(meeting_map[e.meeting_id].service_id,e.meeting_map[e.meeting_id].service_id if e.meeting_id in meeting_map else e.meeting_id)}}</td><td>{{meeting_map[e.meeting_id].meeting_date if e.meeting_id in meeting_map else e.meeting_id}}</td><td><span class="badge">{{e.status}}</span></td><td>{% if user.role_id=='R001' and e.status=='PENDING' %}<form method="post" action="{{url_for('web.review_excuse',excuse_id=e.excuse_id)}}" class="inline"><input type="hidden" name="_csrf_token" value="{{ csrf_token }}"><button name="decision" value="APPROVED" class="btn small">اعتماد</button><button name="decision" value="REJECTED" class="btn small danger">رفض</button><input name="rejection_reason" placeholder="سبب الرفض"></form>{% else %}—{% endif %}</td></tr>{% else %}<tr><td colspan="5">لا توجد اعتذارات.</td></tr>{% endfor %}</tbody></table></div></section>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+ const service=document.getElementById('excuseService'), meeting=document.getElementById('excuseMeeting'), servant=document.getElementById('excuseServant');
+ const meetingOptions=[...meeting.querySelectorAll('option[data-service]')]; const servantOptions=[...servant.querySelectorAll('option[data-service]')];
+ function refreshMeetings(){const sid=service.value; meeting.value=''; meeting.disabled=!sid; meeting.querySelectorAll('option[data-service]').forEach(o=>o.hidden=o.dataset.service!==sid); servant.value=''; servant.disabled=true; servant.querySelectorAll('option[data-service]').forEach(o=>o.hidden=true);}
+ function refreshServants(){const sid=service.value, mid=meeting.value; const m=meeting.querySelector(`option[value="${CSS.escape(mid)}"]`); const d=m?.textContent?.split(' — ')[0]||''; servant.value=''; servant.disabled=!sid||!mid; servantOptions.forEach(o=>{const ok=o.dataset.service===sid && o.dataset.start<=d && o.dataset.end>=d; o.hidden=!ok;});}
+ service.addEventListener('change',refreshMeetings); meeting.addEventListener('change',refreshServants);
+});
+</script>
+{% endblock %}
