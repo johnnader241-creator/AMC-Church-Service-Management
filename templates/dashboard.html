@@ -1,5 +1,5 @@
 {% extends 'base.html' %}{% block title %}الرئيسية — إدارة الخدمة{% endblock %}{% block crumb %}الرئيسية{% endblock %}{% block content %}
-<div class="hero"><div><span class="eyebrow">لوحة الإدارة الرئيسية</span><h1>أهلاً {{ user.username }} 👋</h1><p>كل اللي محتاجه في الخدمة، قدامك في مكان واحد.</p></div><div class="hero-side"><img class="hero-logo" src="{{url_for('static',filename='logo-mark.svg')}}" alt="Logo"><div class="hero-badge"><span class="dot online"></span> النظام جاهز</div></div></div>
+<div class="hero"><div><span class="eyebrow">لوحة الإدارة الرئيسية</span><h1>أهلاً {{ user.username }} 👋</h1><p>كل اللي محتاجه في الخدمة، قدامك في مكان واحد.</p></div><div class="hero-side"><img class="hero-logo" src="{{url_for('static',filename='logo.png')}}" alt="Logo"><div class="hero-badge"><span class="dot online"></span> النظام جاهز</div></div></div>
 <div class="kpi-grid">{% for key,label in [('servants','الخدام النشطون'),('services','الخدمات'),('meetings','آخر الاجتماعات'),('events','الأحداث'),('openings','الافتتاحيات')] %}<div class="kpi"><small>{{label}}</small><strong>{{counts[key]}}</strong></div>{% endfor %}</div>
 <div class="section-title"><div><span class="eyebrow">الشاشات الرئيسية</span><h2>إدارة الخدمة</h2></div></div>
 <div class="screen-grid">

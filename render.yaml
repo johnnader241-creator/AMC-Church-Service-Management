@@ -12,7 +12,9 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: church-service-db
+          property: connectionString
       - key: BOOTSTRAP_ADMIN_USERNAME
         value: admin
       - key: BOOTSTRAP_ADMIN_EMAIL
@@ -31,3 +33,9 @@ services:
         value: "1800"
       - key: DB_CONNECT_TIMEOUT
         value: "10"
+
+databases:
+  - name: church-service-db
+    plan: free
+    databaseName: church_service
+    user: church_user

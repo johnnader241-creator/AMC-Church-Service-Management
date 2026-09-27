@@ -181,7 +181,7 @@ class Meeting(Base):
     cancelled_by: Mapped[str|None] = mapped_column(ForeignKey('users.user_id', ondelete='RESTRICT'))
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     updated_by: Mapped[str|None] = mapped_column(ForeignKey('users.user_id', ondelete='RESTRICT'))
-    __table_args__=(UniqueConstraint('service_id','meeting_date',name='uq_meeting_service_date'), UniqueConstraint('meeting_id','service_id','service_year_id',name='uq_meeting_composite_ref'), CheckConstraint("day_of_week IN ('THURSDAY','FRIDAY')", name='ck_meeting_day'), CheckConstraint("status IN ('SCHEDULED','COMPLETED','CANCELLED_BY_CHURCH','CANCELLED_BY_SERVICE')", name='ck_meeting_status'))
+    __table_args__=(UniqueConstraint('service_id','meeting_date',name='uq_meeting_service_date'), CheckConstraint("day_of_week IN ('THURSDAY','FRIDAY')", name='ck_meeting_day'), CheckConstraint("status IN ('SCHEDULED','COMPLETED','CANCELLED_BY_CHURCH','CANCELLED_BY_SERVICE')", name='ck_meeting_status'))
 
 class Event(Base):
     __tablename__='events'
@@ -362,3 +362,4 @@ class ExcelChange(Base):
     apply_status: Mapped[str] = mapped_column(String(20), default='PENDING')
     applied_at: Mapped[datetime|None] = mapped_column(DateTime)
     applied_by: Mapped[str|None] = mapped_column(ForeignKey('users.user_id', ondelete='RESTRICT'))
+
